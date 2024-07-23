@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>图片瀑布流</title>
+  <style>
+    #container {
+      width: 100%;
+    }
+
+    .image-set {
+      margin-bottom: 20px;
+    }
+
+    .image-set img {
+      width: 100%;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .scroll-button {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .scroll-button button {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+
+    .left-scroll-button {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .left-scroll-button button {
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="center">
+    <h1>Image Viewer by CJoey</h1>
+  </div>
+  <div class="center">
+    <button onclick="clearAll()">清除所有文件夹</button>
+    <button onclick="clearAllImages()">清除所有图片</button>
+  </div>
+  <div id="controls" class="controls">
+    <input type="file" class="fileInput" multiple webkitdirectory>
+    <button onclick="loadImages(this)">显示图片</button>
+    <button onclick="scrollToImage('img-initial')">跳转到该文件夹图片</button>
+  </div>
+  <div id="container"></div>
+
+  <div class="scroll-button">
+    <button onclick="scrollToTop()">↑</button>
+    <button onclick="scrollToBottom()">↓</button>
+  </div>
+
+  <div class="left-scroll-button">
+    <button onclick="scrollToPrevSet()">↑</button>
+    <button onclick="scrollToNextSet()">↓</button>
+  </div>
+
+  <script>
+    let imageSets = [];
+    let controlIndex = 0;
+
+    function loadImages(button) {
+      const fileInput = button.previousElementSibling;
+      const container = document.getElementById('container');
+
+      const imageSet = document.createElement('div');
+      imageSet.className = 'image-set';
+      const firstImageId = `img-${Date.now()}`;
+
+      for (let i = 0; i < fileInput.files.length; i++) {
+        const file = fileInput.files[i];
+
+        // 过滤非图片文件
+        if (!file.type.startsWith('image/')) {
+          continue;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          if (i === 0) {
+            img.id = firstImageId;
+          }
+          imageSet.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      const clearButton = document.createElement('button');
+      clearButton.textContent = '清除图片';
+      clearButton.onclick = function () {
+        container.removeChild(imageSet);
+        imageSets = imageSets.filter(set => set !== firstImageId);
+      };
+
+      imageSet.appendChild(clearButton);
+      container.appendChild(imageSet);
+      imageSets.push(firstImageId);
+
+      // 更新每个"显示图片"按钮后的跳转按钮
+      updateJumpButtons();
+
+      // 每次点击显示图片后添加新的文件输入和显示按钮
+      const newControls = document.createElement('div');
+      newControls.className = 'controls';
+      newControls.innerHTML = `
+        <input type="file" class="fileInput" multiple webkitdirectory>
+        <button onclick="loadImages(this)">显示图片</button>
+        <button onclick="scrollToImage('${firstImageId}')">跳转到该文件夹图片</button>
+      `;
+      document.getElementById('controls').appendChild(newControls);
+      controlIndex++;
+    }
+
+    function clearAll() {
+      document.getElementById('container').innerHTML = '';
+      document.getElementById('controls').innerHTML = `
+        <input type="file" class="fileInput" multiple webkitdirectory>
+        <button onclick="loadImages(this)">显示图片</button>
+        <button onclick="scrollToImage('img-initial')">跳转到该文件夹图片</button>
+      `;
+      imageSets = [];
+      controlIndex = 0;
+    }
+
+    function clearAllImages() {
+      const container = document.getElementById('container');
+      container.innerHTML = '';
+      imageSets = [];
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function scrollToImage(imageId) {
+      const image = document.getElementById(imageId);
+      if (image) {
+        image.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    function scrollToNextSet() {
+      const currentPos = window.scrollY;
+      for (const imageId of imageSets) {
+        const image = document.getElementById(imageId);
+        if (image && image.offsetTop > currentPos) {
+          image.scrollIntoView({ behavior: 'smooth' });
+          break;
+        }
+      }
+    }
+
+    function scrollToPrevSet() {
+      const currentPos = window.scrollY;
+      for (let i = imageSets.length - 1; i >= 0; i--) {
+        const imageId = imageSets[i];
+        const image = document.getElementById(imageId);
+        if (image && image.offsetTop < currentPos) {
+          image.scrollIntoView({ behavior: 'smooth' });
+          break;
+        }
+      }
+    }
+
+    function updateJumpButtons() {
+      const controlsDivs = document.querySelectorAll('.controls');
+      controlsDivs.forEach((controlsDiv, index) => {
+        if (!controlsDiv.querySelector('button[onclick^="scrollToImage"]')) {
+          const button = document.createElement('button');
+          button.textContent = '跳转到该文件夹图片';
+          const firstImageId = imageSets[index];
+          button.setAttribute('onclick', `scrollToImage('${firstImageId}')`);
+          controlsDiv.appendChild(button);
+        }
+      });
+    }
+
+    // Initial setup
+    const initialJumpButton = document.querySelector('button[onclick="scrollToImage(\'img-initial\')"]');
+    if (!initialJumpButton) {
+      const initialJumpButton = document.createElement('button');
+      initialJumpButton.textContent = '跳转到该文件夹图片';
+      initialJumpButton.setAttribute('onclick', 'scrollToImage(\'img-initial\')');
+      document.querySelector('.controls').appendChild(initialJumpButton);
+    }
+  </script>
+</body>
+
+</html>
