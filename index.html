@@ -5,58 +5,58 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>图片瀑布流</title>
+  <title>Image Viewer by CJoey</title>
   <style>
     #container {
       width: 100%;
     }
 
-    .image-set {
+  .image-set {
       margin-bottom: 20px;
     }
 
-    .image-set img {
+  .image-set img {
       width: 100%;
       height: auto;
-      margin-bottom: 10px;
+      margin-bottom: 0px;
     }
 
-    .controls {
+  .controls {
       margin-bottom: 20px;
     }
 
-    .center {
+  .center {
       text-align: center;
     }
 
-    .scroll-button {
+  .scroll-button {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
+      bottom: 200px;
+      right: 20px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 50px;
     }
 
-    .scroll-button button {
-      width: 40px;
-      height: 40px;
-      font-size: 18px;
+  .scroll-button button {
+      width: 50px;
+      height: 50px;
+      font-size: 30px;
     }
 
-    .left-scroll-button {
+  .left-scroll-button {
       position: fixed;
-      bottom: 10px;
-      left: 10px;
+      bottom: 200px;
+      left: 20px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 50px;
     }
 
-    .left-scroll-button button {
-      width: 40px;
-      height: 40px;
-      font-size: 18px;
+  .left-scroll-button button {
+      width: 50px;
+      height: 50px;
+      font-size: 30px;
     }
   </style>
 </head>
@@ -66,13 +66,13 @@
     <h1>Image Viewer by CJoey</h1>
   </div>
   <div class="center">
-    <button onclick="clearAll()">清除所有文件夹</button>
-    <button onclick="clearAllImages()">清除所有图片</button>
+    <button onclick="clearAllFiles()">clear all files</button>
+    <button onclick="clearAllImages()">clear all pics</button>
   </div>
   <div id="controls" class="controls">
     <input type="file" class="fileInput" multiple webkitdirectory>
-    <button onclick="loadImages(this)">显示图片</button>
-    <button onclick="scrollToImage('img-initial')">跳转到该文件夹图片</button>
+    <button onclick="loadImages(this)">View</button>
+    <button onclick="scrollToImage('img-initial')">Jump</button>
   </div>
   <div id="container"></div>
 
@@ -122,7 +122,7 @@
       clearButton.textContent = '清除图片';
       clearButton.onclick = function () {
         container.removeChild(imageSet);
-        imageSets = imageSets.filter(set => set !== firstImageId);
+        imageSets = imageSets.filter(set => set!== firstImageId);
       };
 
       imageSet.appendChild(clearButton);
@@ -132,24 +132,26 @@
       // 更新每个"显示图片"按钮后的跳转按钮
       updateJumpButtons();
 
-      // 每次点击显示图片后添加新的文件输入和显示按钮
-      const newControls = document.createElement('div');
-      newControls.className = 'controls';
-      newControls.innerHTML = `
-        <input type="file" class="fileInput" multiple webkitdirectory>
-        <button onclick="loadImages(this)">显示图片</button>
-        <button onclick="scrollToImage('${firstImageId}')">跳转到该文件夹图片</button>
-      `;
-      document.getElementById('controls').appendChild(newControls);
-      controlIndex++;
+      // 只有点击最新生成的 "View" 按钮才添加新的文件输入和显示控制区域
+      if (button === document.querySelectorAll('.controls button[onclick="loadImages(this)"]')[document.querySelectorAll('.controls button[onclick="loadImages(this)"]').length - 1]) {
+        const newControls = document.createElement('div');
+        newControls.className = 'controls';
+        newControls.innerHTML = `
+          <input type="file" class="fileInput" multiple webkitdirectory>
+          <button onclick="loadImages(this)">view</button>
+          <button onclick="scrollToImage('${firstImageId}')">Jump</button>
+        `;
+        document.getElementById('controls').appendChild(newControls);
+        controlIndex++;
+      }
     }
 
-    function clearAll() {
-      document.getElementById('container').innerHTML = '';
+    function clearAllFiles() {
+      // 只清除文件输入和控制区域，不清除图片
       document.getElementById('controls').innerHTML = `
         <input type="file" class="fileInput" multiple webkitdirectory>
-        <button onclick="loadImages(this)">显示图片</button>
-        <button onclick="scrollToImage('img-initial')">跳转到该文件夹图片</button>
+        <button onclick="loadImages(this)">View</button>
+        <button onclick="scrollToImage('img-initial')">Jump</button>
       `;
       imageSets = [];
       controlIndex = 0;
@@ -162,17 +164,17 @@
     }
 
     function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior:'smooth' });
     }
 
     function scrollToBottom() {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      window.scrollTo({ top: document.body.scrollHeight, behavior:'smooth' });
     }
 
     function scrollToImage(imageId) {
       const image = document.getElementById(imageId);
       if (image) {
-        image.scrollIntoView({ behavior: 'smooth' });
+        image.scrollIntoView({ behavior:'smooth' });
       }
     }
 
@@ -181,7 +183,7 @@
       for (const imageId of imageSets) {
         const image = document.getElementById(imageId);
         if (image && image.offsetTop > currentPos) {
-          image.scrollIntoView({ behavior: 'smooth' });
+          image.scrollIntoView({ behavior:'smooth' });
           break;
         }
       }
@@ -193,7 +195,7 @@
         const imageId = imageSets[i];
         const image = document.getElementById(imageId);
         if (image && image.offsetTop < currentPos) {
-          image.scrollIntoView({ behavior: 'smooth' });
+          image.scrollIntoView({ behavior:'smooth' });
           break;
         }
       }
@@ -217,7 +219,7 @@
     if (!initialJumpButton) {
       const initialJumpButton = document.createElement('button');
       initialJumpButton.textContent = '跳转到该文件夹图片';
-      initialJumpButton.setAttribute('onclick', 'scrollToImage(\'img-initial\')');
+      initialJumpButton.setAttribute('onclick','scrollToImage(\'img-initial\')');
       document.querySelector('.controls').appendChild(initialJumpButton);
     }
   </script>
